@@ -203,9 +203,7 @@ class CssCounterStyle {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Predefined counter style instances
-// ---------------------------------------------------------------------------
+// --- Predefined counter style instances --------------------------------------
 
 const _disc = CssCounterStyle._cyclic(symbols: ['•'], suffix: ' ');
 const _circle = CssCounterStyle._cyclic(symbols: ['◦'], suffix: ' ');
