@@ -1,7 +1,7 @@
 /// CSS Counter Styles Level 3 algorithm engine and predefined style registry.
 /// https://www.w3.org/TR/css-counter-styles-3/
 
-enum _System { alphabetic, numeric, additive }
+enum _System { alphabetic, numeric, additive, cyclic }
 
 /// Implements the counter representation algorithm for a single counter style.
 class CssCounterStyle {
@@ -43,15 +43,50 @@ class CssCounterStyle {
         _range = range,
         _pad = null;
 
+  const CssCounterStyle._cyclic({
+    required List<String> symbols,
+    this.suffix = '',
+  })  : _system = _System.cyclic,
+        _symbols = symbols,
+        _additiveSymbols = const [],
+        _range = null,
+        _pad = null;
+
   /// Returns the [CssCounterStyle] for the given [type].
-  static CssCounterStyle? lookup(String type) => _styles[type];
+  /// Supports predefined styles and CSS string literals (e.g., '"★"' or "'👉'").
+  static CssCounterStyle? lookup(String type) {
+    // is it a predefined style?
+    final predefined = _styles[type];
+    if (predefined != null) {
+      return predefined;
+    }
+
+    // is it a CSS string literal?
+    if (type.length >= 2 && 
+       ((type.startsWith('"') && type.endsWith('"')) || 
+        (type.startsWith("'") && type.endsWith("'")))) {
+      
+      // Strip the quotes
+      final literal = type.substring(1, type.length - 1);
+      
+      // Return a dynamic cyclic style for the literal
+      return CssCounterStyle._cyclic(symbols: [literal]);
+    }
+
+    // Unknown style
+    return null;
+  }
 
   /// Returns the formatted marker string for counter value [n],
   /// or null if [n] is outside this style's range or unrepresentable.
   String? format(int n) {
-    if (!_inRange(n)) return null;
+    if (!_inRange(n)) {
+      return null;
+    }
     final rep = _represent(n);
-    if (rep == null) return null;
+    if (rep == null) {
+      return null;
+    }
 
     var result = rep;
     final padSpec = _pad;
@@ -65,11 +100,14 @@ class CssCounterStyle {
 
   bool _inRange(int n) {
     final r = _range;
-    if (r != null) return n >= r.$1 && n <= r.$2;
+    if (r != null) {
+      return n >= r.$1 && n <= r.$2;
+    }
     return switch (_system) {
       _System.numeric => true,
       _System.alphabetic => n >= 1,
       _System.additive => n >= 0,
+      _System.cyclic => true,
     };
   }
 
@@ -77,16 +115,17 @@ class CssCounterStyle {
         _System.alphabetic => _representAlphabetic(n),
         _System.numeric => _representNumeric(n),
         _System.additive => _representAdditive(n),
+        _System.cyclic => _representCyclic(n),
       };
 
-  // Bijective base-N (a, b, ..., z, aa, ab, ...).
-  // Even though the spec does not define the behavior after 26,
-  // this is the observed behavior in Chrome for alphabetic styles
-  // when the value exceeds the number of symbols.
   String? _representAlphabetic(int n) {
-    if (n < 1) return null;
+    if (n < 1) {
+      return null;
+    }
     final len = _symbols.length;
-    if (len < 2) return null;
+    if (len < 2) {
+      return null;
+    }
     var num = n;
     final chars = <String>[];
     while (num > 0) {
@@ -97,11 +136,14 @@ class CssCounterStyle {
     return chars.reversed.join();
   }
 
-  // Standard positional (0, 1, ..., 9, 10, 11, ...).
   String? _representNumeric(int n) {
     final len = _symbols.length;
-    if (len < 2) return null;
-    if (n == 0) return _symbols[0];
+    if (len < 2) {
+      return null;
+    }
+    if (n == 0) {
+      return _symbols[0];
+    }
     final isNeg = n < 0;
     var num = n.abs();
     final chars = <String>[];
@@ -113,33 +155,54 @@ class CssCounterStyle {
     return isNeg ? '-$result' : result;
   }
 
-  // Additive (e.g. roman numerals, armenian, georgian, hebrew).
   String? _representAdditive(int n) {
-    if (n < 0) return null;
+    if (n < 0) {
+      return null;
+    }
     if (n == 0) {
       for (final (w, s) in _additiveSymbols) {
-        if (w == 0) return s;
+        if (w == 0) {
+          return s;
+        }
       }
       return null;
     }
     var remaining = n;
     final buf = StringBuffer();
     for (final (weight, sym) in _additiveSymbols) {
-      if (weight == 0) break;
+      if (weight == 0) {
+        break;
+      }
       while (remaining >= weight) {
         buf.write(sym);
         remaining -= weight;
       }
-      if (remaining == 0) break;
+      if (remaining == 0) {
+        break;
+      }
     }
     return remaining == 0 ? buf.toString() : null;
+  }
+
+  String? _representCyclic(int n) {
+    if (_symbols.isEmpty) {
+      return null;
+    }
+    final index = (n - 1) % _symbols.length;
+    final positiveIndex = index < 0 ? index + _symbols.length : index;
+    return _symbols[positiveIndex];
   }
 }
 
 // ---------------------------------------------------------------------------
 // Predefined counter style instances
-// https://www.w3.org/TR/css-counter-styles-3/#predefined-counters
 // ---------------------------------------------------------------------------
+
+const _disc = CssCounterStyle._cyclic(symbols: ['•'], suffix: ' ');
+const _circle = CssCounterStyle._cyclic(symbols: ['◦'], suffix: ' ');
+const _square = CssCounterStyle._cyclic(symbols: ['▪'], suffix: ' ');
+const _disclosureOpen = CssCounterStyle._cyclic(symbols: ['▾'], suffix: ' ');
+const _disclosureClosed = CssCounterStyle._cyclic(symbols: ['▸'], suffix: ' ');
 
 const _decimal = CssCounterStyle._numeric(
   symbols: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
@@ -148,6 +211,22 @@ const _decimal = CssCounterStyle._numeric(
 const _decimalLeadingZero = CssCounterStyle._numeric(
   symbols: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
   pad: (2, '0'),
+);
+
+const _binary = CssCounterStyle._numeric(
+  symbols: ['0', '1'],
+);
+
+const _octal = CssCounterStyle._numeric(
+  symbols: ['0', '1', '2', '3', '4', '5', '6', '7'],
+);
+
+const _lowerHexadecimal = CssCounterStyle._numeric(
+  symbols: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'],
+);
+
+const _upperHexadecimal = CssCounterStyle._numeric(
+  symbols: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'],
 );
 
 const _arabicIndic = CssCounterStyle._numeric(
@@ -179,14 +258,94 @@ const _cambodian = CssCounterStyle._numeric(
 
 const _cjkDecimal = CssCounterStyle._numeric(
   symbols: ['〇', '一', '二', '三', '四', '五', '六', '七', '八', '九'],
+  suffix: '、',
 );
 
 const _cjkEarthlyBranch = CssCounterStyle._alphabetic(
   symbols: ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'],
+  suffix: '、',
 );
 
 const _cjkHeavenlyStem = CssCounterStyle._alphabetic(
   symbols: ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'],
+  suffix: '、',
+);
+
+const _cjkIdeographic = CssCounterStyle._additive(
+  range: (-9999, 9999),
+  suffix: '、',
+  additiveSymbols: [
+    (9000, '九千'), (8000, '八千'), (7000, '七千'), (6000, '六千'), (5000, '五千'), (4000, '四千'), (3000, '三千'), (2000, '二千'), (1000, '一千'),
+    (900, '九百'), (800, '八百'), (700, '七百'), (600, '六百'), (500, '五百'), (400, '四百'), (300, '三百'), (200, '二百'), (100, '一百'),
+    (90, '九十'), (80, '八十'), (70, '七十'), (60, '六十'), (50, '五十'), (40, '四十'), (30, '三十'), (20, '二十'), (10, '一十'),
+    (9, '九'), (8, '八'), (7, '七'), (6, '六'), (5, '五'), (4, '四'), (3, '三'), (2, '二'), (1, '一'), (0, '零'),
+  ],
+);
+
+const _japaneseFormal = CssCounterStyle._additive(
+  range: (-9999, 9999),
+  suffix: '、',
+  additiveSymbols: [
+    (9000, '九阡'), (8000, '八阡'), (7000, '七阡'), (6000, '六阡'), (5000, '伍阡'), (4000, '四阡'), (3000, '参阡'), (2000, '弐阡'), (1000, '壱阡'),
+    (900, '九百'), (800, '八百'), (700, '七百'), (600, '六百'), (500, '伍百'), (400, '四百'), (300, '参百'), (200, '弐百'), (100, '壱百'),
+    (90, '九拾'), (80, '八拾'), (70, '七拾'), (60, '六拾'), (50, '伍拾'), (40, '四拾'), (30, '参拾'), (20, '弐拾'), (10, '壱拾'),
+    (9, '九'), (8, '八'), (7, '七'), (6, '六'), (5, '伍'), (4, '四'), (3, '参'), (2, '弐'), (1, '壱'), (0, '零'),
+  ],
+);
+
+const _simpChineseFormal = CssCounterStyle._additive(
+  range: (-9999, 9999),
+  suffix: '、',
+  additiveSymbols: [
+    (9000, '玖仟'), (8000, '捌仟'), (7000, '柒仟'), (6000, '陆仟'), (5000, '伍仟'), (4000, '肆仟'), (3000, '叁仟'), (2000, '贰仟'), (1000, '壹仟'),
+    (900, '玖佰'), (800, '捌佰'), (700, '柒佰'), (600, '陆佰'), (500, '伍佰'), (400, '肆佰'), (300, '叁佰'), (200, '贰佰'), (100, '壹佰'),
+    (90, '玖拾'), (80, '捌拾'), (70, '柒拾'), (60, '陆拾'), (50, '伍拾'), (40, '肆拾'), (30, '叁拾'), (20, '贰拾'), (10, '壹拾'),
+    (9, '玖'), (8, '捌'), (7, '柒'), (6, '陆'), (5, '伍'), (4, '肆'), (3, '叁'), (2, '贰'), (1, '壹'), (0, '零'),
+  ],
+);
+
+const _tradChineseFormal = CssCounterStyle._additive(
+  range: (-9999, 9999),
+  suffix: '、',
+  additiveSymbols: [
+    (9000, '玖仟'), (8000, '捌仟'), (7000, '柒仟'), (6000, '陸仟'), (5000, '伍仟'), (4000, '肆仟'), (3000, '參仟'), (2000, '貳仟'), (1000, '壹仟'),
+    (900, '玖佰'), (800, '捌佰'), (700, '柒佰'), (600, '陸佰'), (500, '伍佰'), (400, '肆佰'), (300, '參佰'), (200, '貳佰'), (100, '壹佰'),
+    (90, '玖拾'), (80, '捌拾'), (70, '柒拾'), (60, '陸拾'), (50, '伍拾'), (40, '肆拾'), (30, '參拾'), (20, '貳拾'), (10, '壹拾'),
+    (9, '玖'), (8, '捌'), (7, '柒'), (6, '陸'), (5, '伍'), (4, '肆'), (3, '參'), (2, '貳'), (1, '壹'), (0, '零'),
+  ],
+);
+
+const _koreanHangulFormal = CssCounterStyle._additive(
+  range: (-9999, 9999),
+  suffix: ', ',
+  additiveSymbols: [
+    (9000, '구천'), (8000, '팔천'), (7000, '칠천'), (6000, '육천'), (5000, '오천'), (4000, '사천'), (3000, '삼천'), (2000, '이천'), (1000, '일천'),
+    (900, '구백'), (800, '팔백'), (700, '칠백'), (600, '육백'), (500, '오백'), (400, '사백'), (300, '삼백'), (200, '이백'), (100, '일백'),
+    (90, '구십'), (80, '팔십'), (70, '칠십'), (60, '육십'), (50, '오십'), (40, '사십'), (30, '삼십'), (20, '이십'), (10, '일십'),
+    (9, '구'), (8, '팔'), (7, '칠'), (6, '육'), (5, '오'), (4, '사'), (3, '삼'), (2, '이'), (1, '일'), (0, '영'),
+  ],
+);
+
+const _koreanHanjaFormal = CssCounterStyle._additive(
+  range: (-9999, 9999),
+  suffix: ', ',
+  additiveSymbols: [
+    (9000, '九仟'), (8000, '八仟'), (7000, '七仟'), (6000, '六仟'), (5000, '五仟'), (4000, '四仟'), (3000, '參仟'), (2000, '貳仟'), (1000, '壹仟'),
+    (900, '九百'), (800, '八百'), (700, '七百'), (600, '六百'), (500, '五百'), (400, '四百'), (300, '參百'), (200, '貳百'), (100, '壹百'),
+    (90, '九拾'), (80, '八拾'), (70, '七拾'), (60, '六拾'), (50, '五拾'), (40, '四拾'), (30, '參拾'), (20, '貳拾'), (10, '壹拾'),
+    (9, '九'), (8, '八'), (7, '七'), (6, '六'), (5, '五'), (4, '四'), (3, '參'), (2, '貳'), (1, '壹'), (0, '零'),
+  ],
+);
+
+const _koreanHanjaInformal = CssCounterStyle._additive(
+  range: (-9999, 9999),
+  suffix: ', ',
+  additiveSymbols: [
+    (9000, '九千'), (8000, '八千'), (7000, '七千'), (6000, '六千'), (5000, '五千'), (4000, '四千'), (3000, '三千'), (2000, '二千'), (1000, '一千'),
+    (900, '九百'), (800, '八百'), (700, '七百'), (600, '六百'), (500, '五百'), (400, '四百'), (300, '三百'), (200, '二百'), (100, '一百'),
+    (90, '九十'), (80, '八十'), (70, '七十'), (60, '六十'), (50, '五十'), (40, '四十'), (30, '三十'), (20, '二十'), (10, '一十'),
+    (9, '九'), (8, '八'), (7, '七'), (6, '六'), (5, '五'), (4, '四'), (3, '三'), (2, '二'), (1, '一'), (0, '零'),
+  ],
 );
 
 const _devanagari = CssCounterStyle._numeric(
@@ -243,6 +402,7 @@ const _hiragana = CssCounterStyle._alphabetic(
     'ま', 'み', 'む', 'め', 'も', 'や', 'ゆ', 'よ', 'ら', 'り', 'る', 'れ', 'ろ', 'わ', 'ゐ',
     'ゑ', 'を', 'ん',
   ],
+  suffix: '、',
 );
 
 const _hiraganaIroha = CssCounterStyle._alphabetic(
@@ -252,6 +412,7 @@ const _hiraganaIroha = CssCounterStyle._alphabetic(
     'け', 'ふ', 'こ', 'え', 'て', 'あ', 'さ', 'き', 'ゆ', 'め', 'み', 'し', 'ゑ', 'ひ', 'も',
     'せ', 'す',
   ],
+  suffix: '、',
 );
 
 const _kannada = CssCounterStyle._numeric(
@@ -265,6 +426,7 @@ const _katakana = CssCounterStyle._alphabetic(
     'マ', 'ミ', 'ム', 'メ', 'モ', 'ヤ', 'ユ', 'ヨ', 'ラ', 'リ', 'ル', 'レ', 'ロ', 'ワ', 'ヰ',
     'ヱ', 'ヲ', 'ン',
   ],
+  suffix: '、',
 );
 
 const _katakanaIroha = CssCounterStyle._alphabetic(
@@ -274,9 +436,8 @@ const _katakanaIroha = CssCounterStyle._alphabetic(
     'ケ', 'フ', 'コ', 'エ', 'テ', 'ア', 'サ', 'キ', 'ユ', 'メ', 'ミ', 'シ', 'ヱ', 'ヒ', 'モ',
     'セ', 'ス',
   ],
+  suffix: '、',
 );
-
-const _khmer = _cambodian;
 
 const _lao = CssCounterStyle._numeric(
   symbols: ['໐', '໑', '໒', '໓', '໔', '໕', '໖', '໗', '໘', '໙'],
@@ -362,15 +523,35 @@ const _upperRoman = CssCounterStyle._additive(
 );
 
 const _styles = {
+  'disc': _disc,
+  'circle': _circle,
+  'square': _square,
+  'disclosure-open': _disclosureOpen,
+  'disclosure-closed': _disclosureClosed,
+  'decimal': _decimal,
+  'decimal-leading-zero': _decimalLeadingZero,
+  'binary': _binary,
+  'octal': _octal,
+  'lower-hexadecimal': _lowerHexadecimal,
+  'upper-hexadecimal': _upperHexadecimal,
   'arabic-indic': _arabicIndic,
   'armenian': _armenian,
   'bengali': _bengali,
   'cambodian': _cambodian,
+  'khmer': _cambodian,
   'cjk-decimal': _cjkDecimal,
   'cjk-earthly-branch': _cjkEarthlyBranch,
   'cjk-heavenly-stem': _cjkHeavenlyStem,
-  'decimal': _decimal,
-  'decimal-leading-zero': _decimalLeadingZero,
+  'cjk-ideographic': _cjkIdeographic,
+  'simp-chinese-informal': _cjkIdeographic,
+  'trad-chinese-informal': _cjkIdeographic,
+  'japanese-informal': _cjkIdeographic,
+  'simp-chinese-formal': _simpChineseFormal,
+  'trad-chinese-formal': _tradChineseFormal,
+  'japanese-formal': _japaneseFormal,
+  'korean-hangul-formal': _koreanHangulFormal,
+  'korean-hanja-formal': _koreanHanjaFormal,
+  'korean-hanja-informal': _koreanHanjaInformal,
   'devanagari': _devanagari,
   'georgian': _georgian,
   'gujarati': _gujarati,
@@ -383,7 +564,6 @@ const _styles = {
   'kannada': _kannada,
   'katakana': _katakana,
   'katakana-iroha': _katakanaIroha,
-  'khmer': _khmer,
   'lao': _lao,
   'lower-alpha': _lowerAlpha,
   'lower-armenian': _armenian,
