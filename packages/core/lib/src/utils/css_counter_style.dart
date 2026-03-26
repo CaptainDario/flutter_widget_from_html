@@ -61,19 +61,28 @@ class CssCounterStyle {
       return predefined;
     }
 
-    // is it a CSS string literal?
-    if (type.length >= 2 && 
-       ((type.startsWith('"') && type.endsWith('"')) || 
-        (type.startsWith("'") && type.endsWith("'")))) {
+    // is it an empty string literal?
+    if (type.isEmpty) {
+      return null;
+    }
+
+    // is it explicitly quoted?
+    final isExplicitlyQuoted = type.length >= 2 &&
+        ((type.startsWith('"') && type.endsWith('"')) ||
+         (type.startsWith("'") && type.endsWith("'")));
+
+    // is it a stripped string literal? (symbols, spaces, emojis)
+    final isSymbolOrTextWithSpaces = !RegExp(r'^[a-zA-Z\-]+$').hasMatch(type);
+
+    if (isExplicitlyQuoted || isSymbolOrTextWithSpaces) {
+      // strip the quotes if they survived the html parser
+      final literal = isExplicitlyQuoted ? type.substring(1, type.length - 1) : type;
       
-      // Strip the quotes
-      final literal = type.substring(1, type.length - 1);
-      
-      // Return a dynamic cyclic style for the literal
+      // return a dynamic cyclic style for the literal
       return CssCounterStyle._cyclic(symbols: [literal]);
     }
 
-    // Unknown style
+    // unknown style
     return null;
   }
 
@@ -523,11 +532,12 @@ const _upperRoman = CssCounterStyle._additive(
 );
 
 const _styles = {
-  'disc': _disc,
-  'circle': _circle,
-  'square': _square,
-  'disclosure-open': _disclosureOpen,
-  'disclosure-closed': _disclosureClosed,
+  // may be of interest in the future, currently done using `HtmlListMarker`
+  //'disc': _disc,
+  //'circle': _circle,
+  //'square': _square,
+  //'disclosure-open': _disclosureOpen,
+  //'disclosure-closed': _disclosureClosed,
   'decimal': _decimal,
   'decimal-leading-zero': _decimalLeadingZero,
   'binary': _binary,
