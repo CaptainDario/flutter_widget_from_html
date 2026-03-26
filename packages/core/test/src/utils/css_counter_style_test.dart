@@ -125,6 +125,55 @@ void main() {
       test('format(10)', () => expect(style.format(10), '๑๐.'));
     });
 
+    // may be of interest in the future, currently done using `HtmlListMarker`
+    /*group('cyclic standard shapes (disc, circle, square)', () {
+      final style = CssCounterStyle.lookup('disc')!;
+      // Shapes use a space suffix instead of a dot
+      test('format(1)', () => expect(style.format(1), '• '));
+      test('format(2)', () => expect(style.format(2), '• '));
+      test('format(100)', () => expect(style.format(100), '• '));
+      // Cyclic handles 0 and negatives by looping backwards, 
+      // but since there's only 1 symbol, it's always the same.
+      test('format(0)', () => expect(style.format(0), '• ')); 
+      test('format(-5)', () => expect(style.format(-5), '• '));
+    });*/
+
+    group('dynamic string literals (cyclic)', () {
+      // Test double quotes
+      final styleDouble = CssCounterStyle.lookup('"★"')!;
+      test('format(1) double quotes', () => expect(styleDouble.format(1), '★'));
+      test('format(5) double quotes', () => expect(styleDouble.format(5), '★'));
+      
+      // Test single quotes
+      final styleSingle = CssCounterStyle.lookup("'👉'")!;
+      test('format(1) single quotes', () => expect(styleSingle.format(1), '👉'));
+    });
+
+    group('base-N numeric (binary, hex)', () {
+      final binary = CssCounterStyle.lookup('binary')!;
+      test('binary format(2)', () => expect(binary.format(2), '10.'));
+      test('binary format(5)', () => expect(binary.format(5), '101.'));
+
+      final hex = CssCounterStyle.lookup('lower-hexadecimal')!;
+      test('hex format(10)', () => expect(hex.format(10), 'a.'));
+      test('hex format(15)', () => expect(hex.format(15), 'f.'));
+      test('hex format(16)', () => expect(hex.format(16), '10.'));
+      test('hex format(255)', () => expect(hex.format(255), 'ff.'));
+    });
+
+    group('cjk styles (additive fallback)', () {
+      final style = CssCounterStyle.lookup('cjk-ideographic')!;
+
+      test('format(1)', () => expect(style.format(1), '一、'));
+      test('format(10)', () => expect(style.format(10), '一十、'));
+      test('format(11)', () => expect(style.format(11), '一十一、'));
+      
+      test('format(101) - additive fallback', () => expect(style.format(101), '一百一、')); 
+      
+      test('format(9999)', () => expect(style.format(9999), '九千九百九十九、'));
+      test('format(0)', () => expect(style.format(0), '零、'));
+    });
+
     test('lookup(invalid)', () => expect(CssCounterStyle.lookup('foo'), null));
   });
 }
