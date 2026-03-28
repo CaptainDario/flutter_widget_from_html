@@ -34,6 +34,7 @@ class WidgetFactory extends WidgetFactoryResetter with AnchorWidgetFactory {
 
   BuildOp? _styleBackground;
   BuildOp? _styleBorder;
+  BuildOp? _styleClipPath;
   BuildOp? _styleDisplayFlex;
   BuildOp? _styleMargin;
   BuildOp? _stylePadding;
@@ -185,6 +186,14 @@ class WidgetFactory extends WidgetFactoryResetter with AnchorWidgetFactory {
       child: grandChild ?? child,
     );
   }
+
+  /// Builds [ClipPath].
+  Widget? buildClipPath(
+    BuildTree tree,
+    Widget child,
+    CustomClipper<Path> clipper,
+  ) =>
+      ClipPath(clipper: clipper, child: child);
 
   /// Builds decoration image from [url]
   DecorationImage? buildDecorationImage(
@@ -1101,6 +1110,10 @@ class WidgetFactory extends WidgetFactoryResetter with AnchorWidgetFactory {
 
     if (key.startsWith(kCssBorder)) {
       tree.register(_styleBorder ??= StyleBorder(this).buildOp);
+    }
+
+    if (key == kCssClipPath) {
+      tree.register(_styleClipPath ??= StyleClipPath(this).buildOp);
     }
 
     if (key.startsWith(kCssMargin)) {
