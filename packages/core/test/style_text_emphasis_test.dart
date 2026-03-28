@@ -2,40 +2,240 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '_.dart';
 
+// The emphasis mark is rendered inside SelectionContainer.disabled, which the
+// explainer renders as an opaque [SelectionContainer] placeholder.
+String _em(String base) =>
+    '[HtmlRuby:children=[RichText:(:$base)],[SelectionContainer]]';
+
 void main() {
-  group('text-emphasis: dot', () {
-    testWidgets('adds combining dot above each character', (tester) async {
-      const html = '<span style="text-emphasis: dot">Hello</span>';
+  group('text-emphasis shorthand — filled shapes (default)', () {
+    testWidgets('dot renders glyph above each character', (tester) async {
+      const html = '<span style="text-emphasis: dot">Hi</span>';
       final e = await explain(tester, html);
-      expect(e, equals('[RichText:(:H\u0307e\u0307l\u0307l\u0307o\u0307)]'));
+      expect(e, equals('[RichText:(:${_em('H')}${_em('i')})]'));
     });
 
-    testWidgets('skips whitespace characters', (tester) async {
+    testWidgets('circle renders glyph above each character', (tester) async {
+      const html = '<span style="text-emphasis: circle">\u3070\u306d</span>';
+      final e = await explain(tester, html);
+      expect(e, equals('[RichText:(:${_em('\u3070')}${_em('\u306d')})]'));
+    });
+
+    testWidgets('double-circle renders glyph above each character',
+        (tester) async {
+      const html = '<span style="text-emphasis: double-circle">AB</span>';
+      final e = await explain(tester, html);
+      expect(e, equals('[RichText:(:${_em('A')}${_em('B')})]'));
+    });
+
+    testWidgets('triangle renders glyph above each character', (tester) async {
+      const html = '<span style="text-emphasis: triangle">AB</span>';
+      final e = await explain(tester, html);
+      expect(e, equals('[RichText:(:${_em('A')}${_em('B')})]'));
+    });
+
+    testWidgets('sesame renders glyph above each character', (tester) async {
+      const html = '<span style="text-emphasis: sesame">AB</span>';
+      final e = await explain(tester, html);
+      expect(e, equals('[RichText:(:${_em('A')}${_em('B')})]'));
+    });
+  });
+
+  group('text-emphasis shorthand — open shapes', () {
+    testWidgets('open dot renders glyph above each character', (tester) async {
+      const html = '<span style="text-emphasis: open dot">Hi</span>';
+      final e = await explain(tester, html);
+      expect(e, equals('[RichText:(:${_em('H')}${_em('i')})]'));
+    });
+
+    testWidgets('open circle renders glyph above each character',
+        (tester) async {
+      const html = '<span style="text-emphasis: open circle">Hi</span>';
+      final e = await explain(tester, html);
+      expect(e, equals('[RichText:(:${_em('H')}${_em('i')})]'));
+    });
+
+    testWidgets('open double-circle renders glyph above each character',
+        (tester) async {
+      const html = '<span style="text-emphasis: open double-circle">Hi</span>';
+      final e = await explain(tester, html);
+      expect(e, equals('[RichText:(:${_em('H')}${_em('i')})]'));
+    });
+
+    testWidgets('open triangle renders glyph above each character',
+        (tester) async {
+      const html = '<span style="text-emphasis: open triangle">Hi</span>';
+      final e = await explain(tester, html);
+      expect(e, equals('[RichText:(:${_em('H')}${_em('i')})]'));
+    });
+
+    testWidgets('open sesame renders glyph above each character',
+        (tester) async {
+      const html = '<span style="text-emphasis: open sesame">Hi</span>';
+      final e = await explain(tester, html);
+      expect(e, equals('[RichText:(:${_em('H')}${_em('i')})]'));
+    });
+
+    testWidgets('filled keyword is explicit default', (tester) async {
+      const html = '<span style="text-emphasis: filled circle">Hi</span>';
+      final e = await explain(tester, html);
+      expect(e, equals('[RichText:(:${_em('H')}${_em('i')})]'));
+    });
+  });
+
+  group('text-emphasis-style longhand', () {
+    testWidgets('dot renders glyph above each character', (tester) async {
+      const html = '<span style="text-emphasis-style: dot">Hi</span>';
+      final e = await explain(tester, html);
+      expect(e, equals('[RichText:(:${_em('H')}${_em('i')})]'));
+    });
+
+    testWidgets('circle renders glyph above each character', (tester) async {
+      const html = '<span style="text-emphasis-style: circle">Hi</span>';
+      final e = await explain(tester, html);
+      expect(e, equals('[RichText:(:${_em('H')}${_em('i')})]'));
+    });
+  });
+
+  group('multi-value shorthand with color', () {
+    testWidgets('circle crimson — marks rendered (color inside SelectionContainer)',
+        (tester) async {
+      // Color is applied inside SelectionContainer.disabled which the
+      // explainer renders opaquely; we verify the structural output only.
+      const html =
+          '<span style="text-emphasis: circle crimson">\u3070\u306d</span>';
+      final e = await explain(tester, html);
+      expect(e, equals('[RichText:(:${_em('\u3070')}${_em('\u306d')})]'));
+    });
+  });
+
+  group('whitespace handling', () {
+    testWidgets('skips space between words', (tester) async {
       const html = '<span style="text-emphasis: dot">a b</span>';
       final e = await explain(tester, html);
-      expect(e, equals('[RichText:(:a\u0307 b\u0307)]'));
+      expect(e, equals('[RichText:(:${_em('a')}(: )${_em('b')})]'));
     });
 
-    testWidgets('empty string produces no output', (tester) async {
+    testWidgets('empty span produces no output', (tester) async {
       const html = '<span style="text-emphasis: dot"></span>';
       final e = await explain(tester, html);
       expect(e, equals('[widget0]'));
     });
   });
 
-  group('text-emphasis-style: dot', () {
-    testWidgets('adds combining dot above each character', (tester) async {
-      const html = '<span style="text-emphasis-style: dot">Hi</span>';
+  group('unsupported values', () {
+    testWidgets('none leaves text unchanged', (tester) async {
+      const html = '<span style="text-emphasis: none">Hello</span>';
       final e = await explain(tester, html);
-      expect(e, equals('[RichText:(:H\u0307i\u0307)]'));
+      expect(e, equals('[RichText:(:Hello)]'));
+    });
+
+    testWidgets('unknown keyword leaves text unchanged', (tester) async {
+      const html = '<span style="text-emphasis: foobar">Hello</span>';
+      final e = await explain(tester, html);
+      expect(e, equals('[RichText:(:Hello)]'));
     });
   });
 
-  group('text-emphasis non-dot values are ignored', () {
-    testWidgets('circle value does not transform text', (tester) async {
-      const html = '<span style="text-emphasis: circle">Hello</span>';
+  group('custom mark — CSS <string> value', () {
+    testWidgets('single-quoted character renders above each character',
+        (tester) async {
+      const html = '<span style="text-emphasis-style: \'x\'">Hi</span>';
+      final e = await explain(tester, html);
+      expect(e, equals('[RichText:(:${_em('H')}${_em('i')})]'));
+    });
+
+    testWidgets('double-quoted character renders above each character',
+        (tester) async {
+      const html = '<span style=\'text-emphasis-style: "★"\'>Hi</span>';
+      final e = await explain(tester, html);
+      expect(e, equals('[RichText:(:${_em('H')}${_em('i')})]'));
+    });
+
+    testWidgets('custom mark with color', (tester) async {
+      const html =
+          '<span style="text-emphasis: \'▲\' red">Hi</span>';
+      final e = await explain(tester, html);
+      expect(e, equals('[RichText:(:${_em('H')}${_em('i')})]'));
+    });
+
+    testWidgets('empty string is ignored', (tester) async {
+      const html = '<span style="text-emphasis-style: \'\'">Hello</span>';
       final e = await explain(tester, html);
       expect(e, equals('[RichText:(:Hello)]'));
+    });
+
+    testWidgets('only first character of multi-char string is used',
+        (tester) async {
+      // CSS spec: strings with > 1 char are invalid, but we gracefully use [0].
+      const html = '<span style="text-emphasis-style: \'ab\'">Hi</span>';
+      final e = await explain(tester, html);
+      expect(e, equals('[RichText:(:${_em('H')}${_em('i')})]'));
+    });
+  });
+
+  group('mark isolation', () {
+    testWidgets('mark does not inherit underline from base text',
+        (tester) async {
+      // The base character SHOULD carry +u; SelectionContainer (mark) must NOT.
+      const html =
+          '<span style="text-emphasis: dot; text-decoration-line: underline">'
+          'Hi'
+          '</span>';
+      final e = await explain(tester, html);
+      expect(e, contains('[RichText:(+u:'));
+      expect(e, isNot(contains('+u@5.0')));
+      expect(e, isNot(contains('@5.0:+u')));
+    });
+  });
+
+  group('ruby interaction', () {
+    testWidgets(
+        'emphasis on outer span — ruby children pass through unchanged',
+        (tester) async {
+      // Marks appear on plain text chars; the <ruby> subtree is untouched.
+      const html =
+          '<span style="text-emphasis: dot">x<ruby>\u6f22<rt>\u304b\u3093</rt></ruby>y</span>';
+      final e = await explain(tester, html);
+      expect(e, contains(_em('x')));
+      expect(e, contains('[HtmlRuby:'));
+      expect(e, contains(_em('y')));
+    });
+
+    testWidgets(
+        'emphasis directly on ruby — marks stack with ruby annotation above base',
+        (tester) async {
+      // Emphasis (priority 10) runs before ruby (priority ~11e15).
+      // The base character first gets wrapped in HtmlRuby(ruby: 漢, rt: •),
+      // then ruby's onParsed wraps that WidgetBit as the ruby base with the
+      // <rt> as its annotation. Both marks stack above the character.
+      // CSS spec would prefer emphasis under and ruby above, but Flutter's
+      // single-slot HtmlRuby cannot represent opposing sides — stacking is
+      // the best available option.
+      const html =
+          '<ruby style="text-emphasis: dot">\u6f22<rt>\u304b\u3093</rt></ruby>';
+      final e = await explain(tester, html);
+      // Outer HtmlRuby is the ruby op's result; its ruby slot contains the
+      // emphasis HtmlRuby.
+      expect(e, contains('[HtmlRuby:children=[HtmlRuby:'));
+    });
+
+    testWidgets('emphasis on rt — marks appear above each furigana character',
+        (tester) async {
+      // Emphasis op on <rt> runs (priority 10) and wraps each furigana char.
+      // The replacement preserves element.localName == 'rt' so that ruby's
+      // isRtTree check still passes. Ruby op then calls rtTree.build() which
+      // returns the emphasis-marked furigana for the ruby rt slot.
+      // Visual result (bottom→top): 漢 | •か •ん
+      const html =
+          '<ruby>\u6f22<rt style="text-emphasis: dot">\u304b\u3093</rt></ruby>';
+      final e = await explain(tester, html);
+      // <rt> inherits 0.5em so furigana chars show as @5.0 in the explainer.
+      const emKa = '[HtmlRuby:children=[RichText:(@5.0:\u304b)],[SelectionContainer]]';
+      const emN = '[HtmlRuby:children=[RichText:(@5.0:\u3093)],[SelectionContainer]]';
+      expect(e, contains('[HtmlRuby:children=[RichText:(:'));
+      expect(e, contains(emKa));
+      expect(e, contains(emN));
     });
   });
 }

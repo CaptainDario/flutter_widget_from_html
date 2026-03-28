@@ -1076,9 +1076,7 @@ class WidgetFactory extends WidgetFactoryResetter with AnchorWidgetFactory {
 
       case kCssTextEmphasis:
       case kCssTextEmphasisStyle:
-        if (style.term == kCssTextEmphasisStyleDot) {
-          tree.register(styleTextEmphasisDot);
-        }
+        textEmphasisApply(tree, style);
 
       case kCssTextOverflow:
         final textOverflow = tryParseTextOverflow(style.value);
