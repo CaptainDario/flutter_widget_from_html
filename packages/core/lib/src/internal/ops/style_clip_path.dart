@@ -82,8 +82,11 @@ abstract class CssClipPathShape {
   Path toPath(Size size);
 }
 
-/// Holds a raw SVG path data string for `clip-path: path("...")`.  
+/// Holds a raw SVG path data string for `clip-path: path("...")`.
 /// The actual [Path] is computed at render time by [WidgetFactory.buildClipPathFromSvgData].
+/// [toPath] must never be called directly on this shape — the render path
+/// in [StyleClipPath.buildOp] handles it via the WF hook before reaching
+/// [CssClipPathClipper].
 @immutable
 class CssClipPathSvgPath extends CssClipPathShape {
   final String pathData;
@@ -91,7 +94,10 @@ class CssClipPathSvgPath extends CssClipPathShape {
   const CssClipPathSvgPath(this.pathData);
 
   @override
-  Path toPath(Size size) => Path();
+  Path toPath(Size size) => throw UnsupportedError(
+        'CssClipPathSvgPath.toPath() must not be called directly; '
+        'use WidgetFactory.buildClipPathFromSvgData() instead.',
+      );
 }
 
 @immutable
@@ -445,11 +451,15 @@ CssClipPathShape? _tryParseCssClipPathRect(css.FunctionTerm expression) {
     return null;
   }
 
-  return CssClipPathRect(
-    x: left,
-    y: top,
-    width: right - left,
-    height: bottom - top,
+  // CSS clip-path: rect(top right bottom left) uses inset semantics per spec:
+  // each value is the distance inset from the respective edge, not a coordinate.
+  return CssClipPathInset(
+    cutout: _CssClipPathTrbl(
+      top: top,
+      right: right,
+      bottom: bottom,
+      left: left,
+    ),
   );
 }
 
@@ -634,11 +644,5 @@ extension on CssLength {
     }
   }
 
-  CssLength operator -(CssLength other) {
-    if (unit == other.unit) {
-      return CssLength(number - other.number, unit);
-    }
-
-    return CssLength(number - other.number);
-  }
 }
+

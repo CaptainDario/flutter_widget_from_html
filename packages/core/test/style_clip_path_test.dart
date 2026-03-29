@@ -63,7 +63,10 @@ void main() {
   });
 
   testWidgets('rect', (WidgetTester tester) async {
-    final clipper = await getClipper(tester, 'rect(10% 80% 90% 20%)');
+    // rect() uses inset semantics per CSS spec: each value is the distance
+    // inset from its respective edge (same as inset()).
+    // rect(10% 20% 10% 20%) on 200x100 → visible rect x:[40,160], y:[10,90].
+    final clipper = await getClipper(tester, 'rect(10% 20% 10% 20%)');
 
     final path = clipper.getClip(const Size(200, 100));
     expect(path.contains(const Offset(100, 50)), isTrue);
