@@ -5,6 +5,7 @@ const kCssClipPathCircle = 'circle';
 const kCssClipPathEllipse = 'ellipse';
 const kCssClipPathInset = 'inset';
 const kCssClipPathNone = 'none';
+const kCssClipPathPath = 'path';
 const kCssClipPathPolygon = 'polygon';
 const kCssClipPathRect = 'rect';
 const kCssClipPathXywh = 'xywh';
@@ -23,6 +24,20 @@ class StyleClipPath {
             return placeholder;
           }
 
+          if (shape is CssClipPathSvgPath) {
+            return placeholder.wrapWith(
+              (_, child) {
+                final path = wf.buildClipPathFromSvgData(shape.pathData);
+                if (path == null) {
+                  return child;
+                }
+                return wf.buildClipPath(
+                      tree, child, _FixedPathClipper(path)) ??
+                    child;
+              },
+            );
+          }
+
           return placeholder.wrapWith(
             (_, child) =>
                 wf.buildClipPath(tree, child, CssClipPathClipper(shape)),
@@ -30,6 +45,20 @@ class StyleClipPath {
         },
         priority: BoxModel.clipPath,
       );
+}
+
+@immutable
+class _FixedPathClipper extends CustomClipper<Path> {
+  final Path _path;
+
+  const _FixedPathClipper(this._path);
+
+  @override
+  Path getClip(Size size) => _path;
+
+  @override
+  bool shouldReclip(covariant _FixedPathClipper oldClipper) =>
+      oldClipper._path != _path;
 }
 
 @immutable
@@ -51,6 +80,18 @@ abstract class CssClipPathShape {
   const CssClipPathShape();
 
   Path toPath(Size size);
+}
+
+/// Holds a raw SVG path data string for `clip-path: path("...")`.  
+/// The actual [Path] is computed at render time by [WidgetFactory.buildClipPathFromSvgData].
+@immutable
+class CssClipPathSvgPath extends CssClipPathShape {
+  final String pathData;
+
+  const CssClipPathSvgPath(this.pathData);
+
+  @override
+  Path toPath(Size size) => Path();
 }
 
 @immutable
@@ -240,6 +281,8 @@ CssClipPathShape? tryParseCssClipPath(css.Expression? expression) {
       return _tryParseCssClipPathEllipse(expression);
     case kCssClipPathInset:
       return _tryParseCssClipPathInset(expression);
+    case kCssClipPathPath:
+      return _tryParseCssClipPathPath(expression);
     case kCssClipPathRect:
       return _tryParseCssClipPathRect(expression);
     case kCssClipPathXywh:
@@ -247,6 +290,27 @@ CssClipPathShape? tryParseCssClipPath(css.Expression? expression) {
   }
 
   return null;
+}
+
+CssClipPathShape? _tryParseCssClipPathPath(css.FunctionTerm expression) {
+  final params = expression.params;
+  if (params.isEmpty) {
+    return null;
+  }
+
+  final first = params.first;
+  // csslib stores quoted CSS strings as LiteralTerm where .value includes the
+  // surrounding quote characters. The valueAsString extension strips them.
+  if (first is! css.LiteralTerm) {
+    return null;
+  }
+
+  final pathData = first.valueAsString;
+  if (pathData.isEmpty) {
+    return null;
+  }
+
+  return CssClipPathSvgPath(pathData);
 }
 
 CssClipPathShape? _tryParseCssClipPathPolygon(css.FunctionTerm expression) {

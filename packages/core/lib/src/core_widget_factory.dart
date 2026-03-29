@@ -195,6 +195,12 @@ class WidgetFactory extends WidgetFactoryResetter with AnchorWidgetFactory {
   ) =>
       ClipPath(clipper: clipper, child: child);
 
+  /// Parses an SVG path data string (e.g. from `clip-path: path("...")`) into
+  /// a Flutter [Path], or returns `null` if not supported.
+  ///
+  /// Override in a mixin (e.g. `SvgFactory`) to provide support.
+  Path? buildClipPathFromSvgData(String pathData) => null;
+
   /// Builds decoration image from [url]
   DecorationImage? buildDecorationImage(
     BuildTree tree,
