@@ -84,4 +84,13 @@ void main() {
 
     expect(find.byType(ClipPath), findsNothing);
   });
+
+  // path("...") requires SvgFactory — without it the widget is not clipped.
+  testWidgets('path() no-op without SvgFactory', (WidgetTester tester) async {
+    const html =
+        '<div style="clip-path: path(\'M 0 0 L 100 0 L 50 100 Z\')">Foo</div>';
+    await explain(tester, html);
+
+    expect(find.byType(ClipPath), findsNothing);
+  });
 }
