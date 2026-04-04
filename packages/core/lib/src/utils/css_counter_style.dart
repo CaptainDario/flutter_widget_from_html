@@ -1,5 +1,5 @@
-/// CSS Counter Styles Level 3 algorithm engine and predefined style registry.
-/// https://www.w3.org/TR/css-counter-styles-3/
+// CSS Counter Styles Level 3 algorithm engine and predefined style registry.
+// https://www.w3.org/TR/css-counter-styles-3/
 
 enum _System { alphabetic, numeric, additive, cyclic }
 
@@ -45,8 +45,8 @@ class CssCounterStyle {
 
   const CssCounterStyle._cyclic({
     required List<String> symbols,
-    this.suffix = '',
-  })  : _system = _System.cyclic,
+  })  : suffix = '',
+        _system = _System.cyclic,
         _symbols = symbols,
         _additiveSymbols = const [],
         _range = null,
@@ -204,12 +204,6 @@ class CssCounterStyle {
 }
 
 // --- Predefined counter style instances --------------------------------------
-
-const _disc = CssCounterStyle._cyclic(symbols: ['•'], suffix: ' ');
-const _circle = CssCounterStyle._cyclic(symbols: ['◦'], suffix: ' ');
-const _square = CssCounterStyle._cyclic(symbols: ['▪'], suffix: ' ');
-const _disclosureOpen = CssCounterStyle._cyclic(symbols: ['▾'], suffix: ' ');
-const _disclosureClosed = CssCounterStyle._cyclic(symbols: ['▸'], suffix: ' ');
 
 const _decimal = CssCounterStyle._numeric(
   symbols: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
@@ -530,12 +524,6 @@ const _upperRoman = CssCounterStyle._additive(
 );
 
 const _styles = {
-  // may be of interest in the future, currently done using `HtmlListMarker`
-  //'disc': _disc,
-  //'circle': _circle,
-  //'square': _square,
-  //'disclosure-open': _disclosureOpen,
-  //'disclosure-closed': _disclosureClosed,
   'decimal': _decimal,
   'decimal-leading-zero': _decimalLeadingZero,
   'binary': _binary,
