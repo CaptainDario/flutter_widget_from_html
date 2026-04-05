@@ -98,7 +98,8 @@ void main() {
   });
 
   group('multi-value shorthand with color', () {
-    testWidgets('circle crimson — marks rendered (color inside SelectionContainer)',
+    testWidgets(
+        'circle crimson — marks rendered (color inside SelectionContainer)',
         (tester) async {
       // Color is applied inside SelectionContainer.disabled which the
       // explainer renders opaquely; we verify the structural output only.
@@ -153,8 +154,7 @@ void main() {
     });
 
     testWidgets('custom mark with color', (tester) async {
-      const html =
-          '<span style="text-emphasis: \'▲\' red">Hi</span>';
+      const html = '<span style="text-emphasis: \'▲\' red">Hi</span>';
       final e = await explain(tester, html);
       expect(e, equals('[RichText:(:${_em('H')}${_em('i')})]'));
     });
@@ -190,8 +190,7 @@ void main() {
   });
 
   group('ruby interaction', () {
-    testWidgets(
-        'emphasis on outer span — ruby children pass through unchanged',
+    testWidgets('emphasis on outer span — ruby children pass through unchanged',
         (tester) async {
       // Marks appear on plain text chars; the <ruby> subtree is untouched.
       const html =
@@ -231,8 +230,10 @@ void main() {
           '<ruby>\u6f22<rt style="text-emphasis: dot">\u304b\u3093</rt></ruby>';
       final e = await explain(tester, html);
       // <rt> inherits 0.5em so furigana chars show as @5.0 in the explainer.
-      const emKa = '[HtmlRuby:children=[RichText:(@5.0:\u304b)],[SelectionContainer]]';
-      const emN = '[HtmlRuby:children=[RichText:(@5.0:\u3093)],[SelectionContainer]]';
+      const emKa =
+          '[HtmlRuby:children=[RichText:(@5.0:\u304b)],[SelectionContainer]]';
+      const emN =
+          '[HtmlRuby:children=[RichText:(@5.0:\u3093)],[SelectionContainer]]';
       expect(e, contains('[HtmlRuby:children=[RichText:(:'));
       expect(e, contains(emKa));
       expect(e, contains(emN));
