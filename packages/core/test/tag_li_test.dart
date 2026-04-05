@@ -616,55 +616,58 @@ Future<void> main() async {
         });
       });
       testWidgets('renders cjk-ideographic', (WidgetTester tester) async {
-          const html = '<ol style="list-style-type: cjk-ideographic"><li>x</li><li>x</li><li>x</li></ol>';
-          final explained = await explain(tester, html);
-          expect(
-            explained,
-            equals(
-              padding(
-                list([
-                  item('一、', 'x'),
-                  item('二、', 'x'),
-                  item('三、', 'x'),
-                ]),
-              ),
+        const html =
+            '<ol style="list-style-type: cjk-ideographic"><li>x</li><li>x</li><li>x</li></ol>';
+        final explained = await explain(tester, html);
+        expect(
+          explained,
+          equals(
+            padding(
+              list([
+                item('一、', 'x'),
+                item('二、', 'x'),
+                item('三、', 'x'),
+              ]),
             ),
-          );
-        });
+          ),
+        );
+      });
 
-        testWidgets('renders lower-greek', (WidgetTester tester) async {
-          const html = '<ol style="list-style-type: lower-greek"><li>x</li><li>x</li><li>x</li></ol>';
-          final explained = await explain(tester, html);
-          expect(
-            explained,
-            equals(
-              padding(
-                list([
-                  item('α.', 'x'),
-                  item('β.', 'x'),
-                  item('γ.', 'x'),
-                ]),
-              ),
+      testWidgets('renders lower-greek', (WidgetTester tester) async {
+        const html =
+            '<ol style="list-style-type: lower-greek"><li>x</li><li>x</li><li>x</li></ol>';
+        final explained = await explain(tester, html);
+        expect(
+          explained,
+          equals(
+            padding(
+              list([
+                item('α.', 'x'),
+                item('β.', 'x'),
+                item('γ.', 'x'),
+              ]),
             ),
-          );
-        });
+          ),
+        );
+      });
 
-        testWidgets('renders binary', (WidgetTester tester) async {
-          const html = '<ol style="list-style-type: binary"><li>x</li><li>x</li><li>x</li></ol>';
-          final explained = await explain(tester, html);
-          expect(
-            explained,
-            equals(
-              padding(
-                list([
-                  item('1.', 'x'),
-                  item('10.', 'x'),
-                  item('11.', 'x'),
-                ]),
-              ),
+      testWidgets('renders binary', (WidgetTester tester) async {
+        const html =
+            '<ol style="list-style-type: binary"><li>x</li><li>x</li><li>x</li></ol>';
+        final explained = await explain(tester, html);
+        expect(
+          explained,
+          equals(
+            padding(
+              list([
+                item('1.', 'x'),
+                item('10.', 'x'),
+                item('11.', 'x'),
+              ]),
             ),
-          );
-        });
+          ),
+        );
+      });
     });
 
     group('padding-inline-start', () {

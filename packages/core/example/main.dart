@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 
-
-
 void main() => runApp(const MyApp());
 
 class MyApp extends StatefulWidget {
@@ -13,9 +11,8 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-
   String html = "Hello World!";
-  
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -24,7 +21,7 @@ class _MyAppState extends State<MyApp> {
         appBar: AppBar(
           title: const Text('Flutter Widget from HTML (core)'),
         ),
-        body:  Center(
+        body: Center(
           child: Column(
             children: [
               TextField(

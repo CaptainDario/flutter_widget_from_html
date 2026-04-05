@@ -57,7 +57,8 @@ void main() {
       test('format(3847)', () => expect(style.format(3847), 'mmmdcccxlvii.'));
       test('format(3999)', () => expect(style.format(3999), 'mmmcmxcix.'));
       test('format(0) - out of range', () => expect(style.format(0), null));
-      test('format(4000) - out of range', () => expect(style.format(4000), null));
+      test('format(4000) - out of range',
+          () => expect(style.format(4000), null));
       test('format(-55) - out of range', () => expect(style.format(-55), null));
     });
 
@@ -109,8 +110,7 @@ void main() {
     group('georgian', () {
       final style = CssCounterStyle.lookup('georgian')!;
       test('format(1)', () => expect(style.format(1), 'ա.'));
-      test('format(19999)',
-          () => expect(style.format(19999), 'ჵჰყჳთ.'));
+      test('format(19999)', () => expect(style.format(19999), 'ჵჰყჳთ.'));
     });
 
     group('arabic-indic', () {
@@ -143,10 +143,11 @@ void main() {
       final styleDouble = CssCounterStyle.lookup('"★"')!;
       test('format(1) double quotes', () => expect(styleDouble.format(1), '★'));
       test('format(5) double quotes', () => expect(styleDouble.format(5), '★'));
-      
+
       // Test single quotes
       final styleSingle = CssCounterStyle.lookup("'👉'")!;
-      test('format(1) single quotes', () => expect(styleSingle.format(1), '👉'));
+      test(
+          'format(1) single quotes', () => expect(styleSingle.format(1), '👉'));
     });
 
     group('base-N numeric (binary, hex)', () {
@@ -167,9 +168,10 @@ void main() {
       test('format(1)', () => expect(style.format(1), '一、'));
       test('format(10)', () => expect(style.format(10), '一十、'));
       test('format(11)', () => expect(style.format(11), '一十一、'));
-      
-      test('format(101) - additive fallback', () => expect(style.format(101), '一百一、')); 
-      
+
+      test('format(101) - additive fallback',
+          () => expect(style.format(101), '一百一、'));
+
       test('format(9999)', () => expect(style.format(9999), '九千九百九十九、'));
       test('format(0)', () => expect(style.format(0), '零、'));
     });
