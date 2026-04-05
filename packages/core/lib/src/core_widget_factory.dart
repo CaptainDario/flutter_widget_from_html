@@ -18,7 +18,7 @@ import 'internal/margin_vertical.dart';
 import 'internal/platform_specific/fallback.dart'
     if (dart.library.io) 'internal/platform_specific/io.dart';
 import 'internal/text_ops.dart' as text_ops;
-import 'utils/roman_numerals_converter.dart';
+import 'utils/css_counter_style.dart';
 
 final _logger = Logger('fwfh.WidgetFactory');
 
@@ -524,31 +524,12 @@ class WidgetFactory extends WidgetFactoryResetter with AnchorWidgetFactory {
 
   /// Returns marker text for the specified list style [type] at index [i].
   String getListMarkerText(String type, int i) {
+    final counterStyle = CssCounterStyle.lookup(type);
+    if (counterStyle != null) {
+      return counterStyle.format(i) ?? '';
+    }
+
     switch (type) {
-      case kCssListStyleTypeAlphaLower:
-      case kCssListStyleTypeAlphaLatinLower:
-        if (i >= 1 && i <= 26) {
-          // the specs said it's unspecified after the 26th item
-          // TODO: generate something like aa, ab, etc. when needed
-          return '${String.fromCharCode(96 + i)}.';
-        }
-        return '';
-      case kCssListStyleTypeAlphaUpper:
-      case kCssListStyleTypeAlphaLatinUpper:
-        if (i >= 1 && i <= 26) {
-          // the specs said it's unspecified after the 26th item
-          // TODO: generate something like AA, AB, etc. when needed
-          return '${String.fromCharCode(64 + i)}.';
-        }
-        return '';
-      case kCssListStyleTypeDecimal:
-        return '$i.';
-      case kCssListStyleTypeRomanLower:
-        final roman = intToRomanNumerals(i)?.toLowerCase();
-        return roman != null ? '$roman.' : '';
-      case kCssListStyleTypeRomanUpper:
-        final roman = intToRomanNumerals(i);
-        return roman != null ? '$roman.' : '';
       case kCssListStyleTypeNone:
       default:
         return '';
