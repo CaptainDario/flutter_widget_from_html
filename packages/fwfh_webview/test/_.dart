@@ -7,6 +7,11 @@ import '../../core/test/_.dart' as helper;
 
 String? webViewExplainer(helper.Explainer parent, Widget widget) {
   if (widget is WebView) {
+    final allow =
+        widget.allow?.isNotEmpty == true ? ',allow=${widget.allow}' : '';
+    final allowFullscreen = widget.allowFullscreen
+        ? ',allowFullscreen=${widget.allowFullscreen}'
+        : '';
     final debuggingEnabled = widget.debuggingEnabled
         ? ',debuggingEnabled=${widget.debuggingEnabled}'
         : '';
@@ -27,6 +32,8 @@ String? webViewExplainer(helper.Explainer parent, Widget widget) {
 
     return '[WebView:url=${widget.url}'
         ',aspectRatio=${widget.aspectRatio.toStringAsFixed(2)}'
+        "$allow"
+        "$allowFullscreen"
         "${widget.autoResize ? ',autoResize=${widget.autoResize}' : ''}"
         '$debuggingEnabled'
         '$gestureRecognizers'
