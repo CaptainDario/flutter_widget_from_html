@@ -6,7 +6,6 @@ import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart
 import 'package:golden_toolkit/golden_toolkit.dart';
 
 import '_.dart';
-import '_constants.dart';
 
 // The emphasis mark is rendered inside SelectionContainer.disabled, which the
 // explainer renders as an opaque [SelectionContainer] placeholder.
