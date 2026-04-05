@@ -1,13 +1,20 @@
+import 'dart:io';
+
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
+import 'package:golden_toolkit/golden_toolkit.dart';
 
 import '_.dart';
+import '_constants.dart';
 
 // The emphasis mark is rendered inside SelectionContainer.disabled, which the
 // explainer renders as an opaque [SelectionContainer] placeholder.
 String _em(String base) =>
     '[HtmlRuby:children=[RichText:(:$base)],[SelectionContainer]]';
 
-void main() {
+Future<void> main() async {
+  await loadAppFonts();
   group('text-emphasis shorthand — filled shapes (default)', () {
     testWidgets('dot renders glyph above each character', (tester) async {
       const html = '<span style="text-emphasis: dot">Hi</span>';
@@ -239,4 +246,83 @@ void main() {
       expect(e, contains(emN));
     });
   });
+
+  final goldenSkipEnvVar = Platform.environment['GOLDEN_SKIP'];
+  final goldenSkip = goldenSkipEnvVar == null
+      ? Platform.isLinux
+          ? null
+          : 'Linux only'
+      : 'GOLDEN_SKIP=$goldenSkipEnvVar';
+
+  GoldenToolkit.runWithConfiguration(
+    () {
+      group(
+        'golden',
+        () {
+          final testCases = <String, String>{
+            'filled_shapes': '<div style="font-size: 24px">'
+                '<p style="text-emphasis: dot">dot</p>'
+                '<p style="text-emphasis: circle">circle</p>'
+                '<p style="text-emphasis: double-circle">double-circle</p>'
+                '<p style="text-emphasis: triangle">triangle</p>'
+                '<p style="text-emphasis: sesame">sesame</p>'
+                '</div>',
+            'open_shapes': '<div style="font-size: 24px">'
+                '<p style="text-emphasis: open dot">dot</p>'
+                '<p style="text-emphasis: open circle">circle</p>'
+                '<p style="text-emphasis: open double-circle">double-circle</p>'
+                '<p style="text-emphasis: open triangle">triangle</p>'
+                '<p style="text-emphasis: open sesame">sesame</p>'
+                '</div>',
+            'with_color': '<div style="font-size: 24px">'
+                '<p style="text-emphasis: circle crimson">crimson circle</p>'
+                '<p style="text-emphasis: dot blue">blue dot</p>'
+                '</div>',
+            'custom_mark': '<div style="font-size: 24px">'
+                '<p style="text-emphasis-style: \'★\'">custom star</p>'
+                '</div>',
+            'with_ruby': '<div style="font-size: 24px">'
+                '<p style="text-emphasis: dot">'
+                'x<ruby>漢<rt>かん</rt></ruby>y'
+                '</p>'
+                '</div>',
+          };
+
+          for (final testCase in testCases.entries) {
+            testGoldens(
+              testCase.key,
+              (tester) async {
+                await tester.pumpWidgetBuilder(
+                  _Golden(testCase.value),
+                  wrapper: materialAppWrapper(theme: ThemeData.light()),
+                  surfaceSize: const Size(300, 300),
+                );
+
+                await screenMatchesGolden(tester, testCase.key);
+              },
+              skip: goldenSkip != null,
+            );
+          }
+        },
+        skip: goldenSkip,
+      );
+    },
+    config: GoldenToolkitConfiguration(
+      fileNameFactory: (name) => '$kGoldenFilePrefix/text_emphasis/$name.png',
+    ),
+  );
+}
+
+class _Golden extends StatelessWidget {
+  final String html;
+
+  const _Golden(this.html);
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        body: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: HtmlWidget(html),
+        ),
+      );
 }

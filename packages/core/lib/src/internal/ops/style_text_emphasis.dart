@@ -67,7 +67,7 @@ void textEmphasisApply(BuildTree tree, css.Declaration style) {
       } else {
         // Identifier keyword — dot, circle, open, filled, etc.
         final term = expr.valueAsString;
-        if (_isKnownShape(term)) {
+        if (_emphasisChar(term, false) != null) {
           shape = term;
         } else if (term == kCssTextEmphasisFillOpen) {
           open = true;
@@ -88,25 +88,7 @@ void textEmphasisApply(BuildTree tree, css.Declaration style) {
     return null;
   }
 
-  final glyph = _emphasisChar(shape, open);
-  if (glyph == null) {
-    return null;
-  }
-
-  return (glyph, markColor);
-}
-
-bool _isKnownShape(String value) {
-  switch (value) {
-    case kCssTextEmphasisStyleDot:
-    case kCssTextEmphasisStyleCircle:
-    case kCssTextEmphasisStyleDoubleCircle:
-    case kCssTextEmphasisStyleTriangle:
-    case kCssTextEmphasisStyleSesame:
-      return true;
-    default:
-      return false;
-  }
+  return (_emphasisChar(shape, open)!, markColor);
 }
 
 /// Returns the CSS Text Decoration Level 3 glyph for [shape] / [open].
