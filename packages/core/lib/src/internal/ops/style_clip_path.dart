@@ -1,3 +1,8 @@
+// Public shape classes intentionally reference private helper types
+// (_CssClipPathPoint, _CssClipPathTrbl, _CssClipPathRadius) that live in the
+// same library via `part`. They are implementation details and not reachable
+// by consumers of the public API.
+// ignore_for_file: library_private_types_in_public_api
 part of '../core_ops.dart';
 
 const kCssClipPath = 'clip-path';
@@ -31,8 +36,7 @@ class StyleClipPath {
                 if (path == null) {
                   return child;
                 }
-                return wf.buildClipPath(
-                      tree, child, _FixedPathClipper(path)) ??
+                return wf.buildClipPath(tree, child, _FixedPathClipper(path)) ??
                     child;
               },
             );
@@ -392,7 +396,7 @@ CssClipPathShape? _tryParseCssClipPathCircle(css.FunctionTerm expression) {
 
   final radius = at == 0
       ? null
-      : _tryParseCssLength((at > 0 ? params.first : null)) ??
+      : _tryParseCssLength(at > 0 ? params.first : null) ??
           const CssLength(50, CssLengthUnit.percentage);
 
   if (radius == null) {
@@ -541,7 +545,8 @@ CssClipPathShape? _tryParseCssClipPathXywh(css.FunctionTerm expression) {
     }
   }
 
-  return CssClipPathRect(x: x, y: y, width: width, height: height, radius: radius);
+  return CssClipPathRect(
+      x: x, y: y, width: width, height: height, radius: radius);
 }
 
 int _findParamLiteral(List<css.Expression> params, String literal) {
@@ -707,6 +712,4 @@ extension on CssLength {
         return number;
     }
   }
-
 }
-
