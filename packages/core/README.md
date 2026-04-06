@@ -17,7 +17,7 @@ Add this to your app's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  flutter_widget_from_html_core: ^0.17.0
+  flutter_widget_from_html_core: ^0.17.2
 ```
 
 ## Usage
@@ -110,7 +110,7 @@ Below tags are the ones that have special meaning / styling, all other tags will
 - IMG with support for asset (`asset://`), data uri, local file (`file://`) and network image
 - LI/OL/UL with support for:
   - Attributes: `type`, `start`, `reversed`
-  - Inline style `list-style-type` values: `lower-alpha`, `upper-alpha`, `lower-latin`, `upper-latin`, `circle`, `decimal`, `disc`, `lower-roman`, `upper-roman`, `square`
+  - Inline style `list-style-type` with 50+ predefined counter styles including `decimal`, `disc`, `circle`, `square`, `lower-alpha`, `upper-alpha`, `lower-roman`, `upper-roman`, `lower-greek`, `cjk-decimal`, `cjk-ideographic`, `hiragana`, `katakana`, `hebrew`, `georgian`, `armenian`, `korean-hangul-formal`, and more. Also supports custom string literals (e.g., `'★'`).
 - TABLE/CAPTION/THEAD/TBODY/TFOOT/TR/TD/TH with support for:
   - TABLE attributes `border`, `cellpadding`, `cellspacing`
   - TD/TH attributes `colspan`, `rowspan`, `valign`
@@ -182,8 +182,11 @@ These tags and their contents will be ignored:
 - text-decoration
   - text-decoration-color: `currentcolor`, hex values, `rgb()`, `hsl()` or named colors
   - text-decoration-line: line-through/none/overline/underline
-  - text-decoration-style: dotted/dashed/double/solid
+  - text-decoration-style: dotted/dashed/double/solid/wavy
   - text-decoration-thickness, text-decoration-width: values in `%` only
+- text-emphasis: shorthand for style and color
+  - text-emphasis-color: `currentcolor`, hex values, `rgb()`, `hsl()` or named colors
+  - text-emphasis-style: filled/open with dot/circle/double-circle/triangle/sesame, or custom string marks
 - text-overflow: clip/ellipsis. Note: `text-overflow: ellipsis` should be used in conjuntion with `max-lines` or `-webkit-line-clamp` for better result.
 - text-shadow:
   - 4 values (color x y blur, color x y blur)

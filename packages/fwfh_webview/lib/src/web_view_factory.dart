@@ -59,12 +59,17 @@ mixin WebViewFactory on WidgetFactory {
       return buildWebViewLinkOnly(meta, url);
     }
 
+    final a = meta.element.attributes;
+    final allow = a[kAttributeIframeAllow];
+    final allowFullscreen = a.containsKey(kAttributeIframeAllowFullscreen);
     final dimensOk = height != null && height > 0 && width != null && width > 0;
     final js = webViewJs &&
         (sandbox == null ||
             sandbox.contains(kAttributeIframeSandboxAllowScripts));
     return WebView(
       url,
+      allow: allow,
+      allowFullscreen: allowFullscreen,
       aspectRatio: dimensOk ? width / height : 16 / 9,
       autoResize: !dimensOk && js,
       debuggingEnabled: webViewDebuggingEnabled,

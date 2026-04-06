@@ -18,7 +18,7 @@ import 'internal/margin_vertical.dart';
 import 'internal/platform_specific/fallback.dart'
     if (dart.library.io) 'internal/platform_specific/io.dart';
 import 'internal/text_ops.dart' as text_ops;
-import 'utils/roman_numerals_converter.dart';
+import 'utils/css_counter_style.dart';
 
 final _logger = Logger('fwfh.WidgetFactory');
 
@@ -171,13 +171,16 @@ class WidgetFactory extends WidgetFactoryResetter with AnchorWidgetFactory {
     var clipBehavior = Clip.none;
     Border? nonUniformBorder;
 
-    if (borderRadius != null) {
+    final baseRadius = baseDeco.borderRadius;
+    final effectiveRadius =
+        borderRadius ?? (baseRadius is BorderRadius ? baseRadius : null);
+    if (effectiveRadius != null) {
       final effectiveBorder = decoration.border;
       final borderIsUniform = effectiveBorder?.isUniform ?? true;
       if (borderIsUniform) {
-        decoration = decoration.copyWith(borderRadius: borderRadius);
+        decoration = decoration.copyWith(borderRadius: effectiveRadius);
         clipBehavior = Clip.hardEdge;
-      } else if (effectiveBorder is Border && borderRadius != BorderRadius.zero) {
+      } else if (effectiveBorder is Border && effectiveRadius != BorderRadius.zero) {
         // Non-uniform border + radius: paint each border side along the
         // rounded-rect outline using a CustomPainter (the same canvas/Paint
         // mechanism used in html_list_marker.dart). The border is removed
@@ -191,7 +194,7 @@ class WidgetFactory extends WidgetFactoryResetter with AnchorWidgetFactory {
           gradient: decoration.gradient,
           backgroundBlendMode: decoration.backgroundBlendMode,
           shape: decoration.shape,
-          borderRadius: borderRadius,
+          borderRadius: effectiveRadius,
         );
         clipBehavior = Clip.hardEdge;
       }
@@ -207,7 +210,7 @@ class WidgetFactory extends WidgetFactoryResetter with AnchorWidgetFactory {
       built = CustomPaint(
         foregroundPainter: _NonUniformBorderPainter(
           border: nonUniformBorder,
-          borderRadius: borderRadius!,
+          borderRadius: effectiveRadius!,
         ),
         child: built,
       );
@@ -568,31 +571,12 @@ class WidgetFactory extends WidgetFactoryResetter with AnchorWidgetFactory {
 
   /// Returns marker text for the specified list style [type] at index [i].
   String getListMarkerText(String type, int i) {
+    final counterStyle = CssCounterStyle.lookup(type);
+    if (counterStyle != null) {
+      return counterStyle.format(i) ?? '';
+    }
+
     switch (type) {
-      case kCssListStyleTypeAlphaLower:
-      case kCssListStyleTypeAlphaLatinLower:
-        if (i >= 1 && i <= 26) {
-          // the specs said it's unspecified after the 26th item
-          // TODO: generate something like aa, ab, etc. when needed
-          return '${String.fromCharCode(96 + i)}.';
-        }
-        return '';
-      case kCssListStyleTypeAlphaUpper:
-      case kCssListStyleTypeAlphaLatinUpper:
-        if (i >= 1 && i <= 26) {
-          // the specs said it's unspecified after the 26th item
-          // TODO: generate something like AA, AB, etc. when needed
-          return '${String.fromCharCode(64 + i)}.';
-        }
-        return '';
-      case kCssListStyleTypeDecimal:
-        return '$i.';
-      case kCssListStyleTypeRomanLower:
-        final roman = intToRomanNumerals(i)?.toLowerCase();
-        return roman != null ? '$roman.' : '';
-      case kCssListStyleTypeRomanUpper:
-        final roman = intToRomanNumerals(i);
-        return roman != null ? '$roman.' : '';
       case kCssListStyleTypeNone:
       default:
         return '';
@@ -1117,6 +1101,11 @@ class WidgetFactory extends WidgetFactoryResetter with AnchorWidgetFactory {
       case kCssTextDecorationThickness:
       case kCssTextDecorationWidth:
         textDecorationApply(tree, style);
+
+      case kCssTextEmphasis:
+      case kCssTextEmphasisColor:
+      case kCssTextEmphasisStyle:
+        textEmphasisApply(tree, style);
 
       case kCssTextOverflow:
         final textOverflow = tryParseTextOverflow(style.value);
