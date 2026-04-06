@@ -169,22 +169,51 @@ class WidgetFactory extends WidgetFactoryResetter with AnchorWidgetFactory {
     );
 
     var clipBehavior = Clip.none;
+    Border? nonUniformBorder;
+
     if (borderRadius != null) {
-      final borderIsUniform = decoration.border?.isUniform ?? true;
+      final effectiveBorder = decoration.border;
+      final borderIsUniform = effectiveBorder?.isUniform ?? true;
       if (borderIsUniform) {
-        // TODO: add support for non-uniform border
-        // https://github.com/flutter/flutter/commit/5054b6e
-        // https://pub.dev/packages/non_uniform_border
         decoration = decoration.copyWith(borderRadius: borderRadius);
+        clipBehavior = Clip.hardEdge;
+      } else if (effectiveBorder is Border && borderRadius != BorderRadius.zero) {
+        // Non-uniform border + radius: paint each border side along the
+        // rounded-rect outline using a CustomPainter (the same canvas/Paint
+        // mechanism used in html_list_marker.dart). The border is removed
+        // from the BoxDecoration to avoid Flutter's isUniform assertion;
+        // borderRadius is kept so the Container clips content correctly.
+        nonUniformBorder = effectiveBorder;
+        decoration = BoxDecoration(
+          color: decoration.color,
+          image: decoration.image,
+          boxShadow: decoration.boxShadow,
+          gradient: decoration.gradient,
+          backgroundBlendMode: decoration.backgroundBlendMode,
+          shape: decoration.shape,
+          borderRadius: borderRadius,
+        );
         clipBehavior = Clip.hardEdge;
       }
     }
 
-    return Container(
+    Widget built = Container(
       decoration: decoration,
       clipBehavior: clipBehavior,
       child: grandChild ?? child,
     );
+
+    if (nonUniformBorder != null) {
+      built = CustomPaint(
+        foregroundPainter: _NonUniformBorderPainter(
+          border: nonUniformBorder,
+          borderRadius: borderRadius!,
+        ),
+        child: built,
+      );
+    }
+
+    return built;
   }
 
   /// Builds [ClipPath].
@@ -1336,6 +1365,28 @@ class WidgetFactory extends WidgetFactoryResetter with AnchorWidgetFactory {
         kCssFontWeight: kCssFontWeightBold,
         kCssVerticalAlign: kCssVerticalAlignMiddle,
       };
+}
+
+// Paints a non-uniform [Border] along a rounded-rect outline by delegating to
+// [Border.paint] with a [borderRadius] argument — the same method used by
+// the table cell render object in [HtmlTableCell].
+class _NonUniformBorderPainter extends CustomPainter {
+  final Border border;
+  final BorderRadius borderRadius;
+
+  _NonUniformBorderPainter({
+    required this.border,
+    required this.borderRadius,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    border.paint(canvas, Offset.zero & size, borderRadius: borderRadius);
+  }
+
+  @override
+  bool shouldRepaint(_NonUniformBorderPainter old) =>
+      old.border != border || old.borderRadius != borderRadius;
 }
 
 /// A factory to build widgets.
