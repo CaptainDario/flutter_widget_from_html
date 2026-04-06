@@ -64,7 +64,9 @@ CssBorder _tryParseBorderComponent(CssBorder border, css.Declaration style) {
     switch (style.property) {
       case kCssBorderStyle:
         final val = expr is css.LiteralTerm ? expr.valueAsString : null;
-        if (val == kCssBorderNone) return CssBorderSide.none;
+        if (val == kCssBorderNone) {
+          return CssBorderSide.none;
+        }
         final s = tryParseTextDecorationStyle(expr);
         return s != null ? CssBorderSide(style: s) : null;
       case kCssBorderWidth:
