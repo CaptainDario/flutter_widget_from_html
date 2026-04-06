@@ -302,14 +302,14 @@ packages:
       path: "../packages/enhanced"
       relative: true
     source: path
-    version: "0.17.1"
+    version: "0.17.2"
   flutter_widget_from_html_core:
     dependency: "direct main"
     description:
       path: "../packages/core"
       relative: true
     source: path
-    version: "0.17.0"
+    version: "0.17.2"
   frontend_server_client:
     dependency: transitive
     description:
@@ -359,7 +359,7 @@ packages:
       path: "../packages/fwfh_webview"
       relative: true
     source: path
-    version: "0.15.6"
+    version: "0.15.7"
   glob:
     dependency: transitive
     description:
