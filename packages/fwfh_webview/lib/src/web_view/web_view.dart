@@ -97,9 +97,31 @@ class WebView extends StatefulWidget {
   /// {@endtemplate}
   final String? userAgent;
 
+  /// {@template web_view.allow}
+  /// The `allow` attribute for the iframe's permissions policy.
+  ///
+  /// For example: `'accelerometer; autoplay; fullscreen'`.
+  ///
+  /// Only used on Flutter Web.
+  /// {@endtemplate}
+  final String? allow;
+
+  /// {@template web_view.allowFullscreen}
+  /// Controls whether fullscreen is allowed.
+  ///
+  /// When `true`, the `allowfullscreen` attribute is set on the iframe.
+  ///
+  /// Only used on Flutter Web.
+  ///
+  /// Default: `false`.
+  /// {@endtemplate}
+  final bool allowFullscreen;
+
   /// Creates a web view.
   const WebView(
     this.url, {
+    this.allow,
+    this.allowFullscreen = false,
     required this.aspectRatio,
     @Deprecated('No longer used.') this.autoResizeIntervals = const [],
     bool? autoResize,
