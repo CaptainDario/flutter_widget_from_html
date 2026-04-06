@@ -5,6 +5,7 @@ import 'package:demo_app/screens/font_size.dart';
 import 'package:demo_app/screens/golden.dart';
 import 'package:demo_app/screens/hello_world.dart';
 import 'package:demo_app/screens/hello_world_core.dart';
+import 'package:demo_app/screens/html_playground.dart';
 import 'package:demo_app/screens/huge_html.dart';
 import 'package:demo_app/screens/iframe.dart';
 import 'package:demo_app/screens/img.dart';
@@ -35,6 +36,7 @@ class HomeScreen extends StatelessWidget {
     'Smilie': () => const SmilieScreen(),
     'Wordpress': () => const WordpressScreen(),
     'Text Shadow': () => const TextShadowScreen(),
+    'HTML Playground': () => const HtmlPlaygroundScreen(),
   };
 
   const HomeScreen({super.key});
