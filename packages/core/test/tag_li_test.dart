@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 import 'package:golden_toolkit/golden_toolkit.dart';
@@ -69,6 +70,30 @@ Future<void> main() async {
         ),
       ),
     );
+  });
+
+  testWidgets('renders centered text within list item', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 200,
+            child: HtmlWidget(
+              '<ol><li style="text-align: center">data 1</li></ol>',
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final itemRect = tester.getRect(find.byType(HtmlListItem));
+    final paragraph = tester.renderObject<RenderParagraph>(findText('data 1'));
+    final textRect = tester.getRect(findText('data 1'));
+
+    expect(itemRect.width, greaterThan(100));
+    expect(paragraph.textAlign, equals(TextAlign.center));
+    expect(textRect.center.dx, closeTo(itemRect.center.dx, .1));
   });
 
   testWidgets('renders nested list', (WidgetTester tester) async {
@@ -873,6 +898,31 @@ Future<void> main() async {
       expect(
         key.renderBox.getDryLayout(const BoxConstraints()),
         equals(const Size(50, 5)),
+      );
+    });
+
+    testWidgets('computeDryLayout with textAlign', (tester) async {
+      final key = GlobalKey();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 100,
+              child: HtmlListItem(
+                key: key,
+                textAlign: TextAlign.center,
+                textDirection: TextDirection.ltr,
+                child: const SizedBox(width: 50, height: 5),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        key.renderBox.getDryLayout(const BoxConstraints(maxWidth: 100)),
+        equals(const Size(100, 5)),
       );
     });
 

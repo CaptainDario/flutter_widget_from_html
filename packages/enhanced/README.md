@@ -27,7 +27,7 @@ Add this to your app's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  flutter_widget_from_html: ^0.17.0
+  flutter_widget_from_html: ^0.17.2
 ```
 
 ### Platform specific configuration
@@ -189,11 +189,11 @@ These tags and their contents will be ignored:
 - font-style: italic/normal
 - font-weight: bold/normal/100..900
 - line-height: `normal`, number or value in `em`, `%`, `pt` and `px`
-- margin: 4 values, 2 values or 1 value in `em`, `pt` and `px`
+- margin: 4 values, 3 values, 2 values or 1 value in `em`, `pt` and `px`
   - margin-top, margin-right, margin-bottom, margin-left
   - margin-block-start, margin-block-end
   - margin-inline-start, margin-inline-end
-- padding: 4 values, 2 values or 1 value in `em`, `pt` and `px`
+- padding: 4 values, 3 values, 2 values or 1 value in `em`, `pt` and `px`
   - padding-top, padding-right, padding-bottom, padding-left
   - padding-block-start, padding-block-end
   - padding-inline-start, padding-inline-end
