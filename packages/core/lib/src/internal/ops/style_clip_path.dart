@@ -145,7 +145,11 @@ class CssClipPathCircle extends CssClipPathShape {
   @override
   Path toPath(Size size) {
     final center = Offset(x.resolve(size.width), y.resolve(size.height));
-    final r = radius.resolve(min(size.width, size.height));
+    // Per CSS Shapes spec, percentage radii on circle() resolve against
+    // sqrt(width² + height²) / sqrt(2) — the "normalised diagonal".
+    final diagonal =
+        sqrt(size.width * size.width + size.height * size.height) / sqrt2;
+    final r = radius.resolve(diagonal);
     return Path()..addOval(Rect.fromCircle(center: center, radius: r));
   }
 }
@@ -215,25 +219,64 @@ class CssClipPathRect extends CssClipPathShape {
   final CssLength y;
   final CssLength width;
   final CssLength height;
+  final _CssClipPathRadius? radius;
 
   const CssClipPathRect({
     required this.x,
     required this.y,
     required this.width,
     required this.height,
+    this.radius,
   });
 
   @override
   Path toPath(Size size) {
-    return Path()
-      ..addRect(
-        Rect.fromLTWH(
-          x.resolve(size.width),
-          y.resolve(size.height),
-          width.resolve(size.width),
-          height.resolve(size.height),
-        ),
-      );
+    final rect = Rect.fromLTWH(
+      x.resolve(size.width),
+      y.resolve(size.height),
+      width.resolve(size.width),
+      height.resolve(size.height),
+    );
+    final parsedRadius = radius;
+    if (parsedRadius == null) {
+      return Path()..addRect(rect);
+    }
+    return Path()..addRRect(parsedRadius.toRRect(rect));
+  }
+}
+
+// CSS rect(top right bottom left [round <border-radius>]?):
+// Each value is an absolute edge coordinate measured from the left/top edge of
+// the reference box
+@immutable
+class CssClipPathRectLtrb extends CssClipPathShape {
+  final CssLength top;
+  final CssLength right;
+  final CssLength bottom;
+  final CssLength left;
+  final _CssClipPathRadius? radius;
+
+  const CssClipPathRectLtrb({
+    required this.top,
+    required this.right,
+    required this.bottom,
+    required this.left,
+    this.radius,
+  });
+
+  @override
+  Path toPath(Size size) {
+    final rect = Rect.fromLTRB(
+      left.resolve(size.width),
+      top.resolve(size.height),
+      right.resolve(size.width),
+      bottom.resolve(size.height),
+    );
+    final parsedRadius = radius;
+    if (parsedRadius == null) {
+      return Path()..addRect(rect);
+    }
+    return Path()..addRRect(parsedRadius.toRRect(rect));
   }
 }
 
@@ -439,27 +482,39 @@ CssClipPathShape? _tryParseCssClipPathInset(css.FunctionTerm expression) {
 
 CssClipPathShape? _tryParseCssClipPathRect(css.FunctionTerm expression) {
   final params = expression.params;
-  if (params.length != 4) {
+  if (params.length < 4) {
     return null;
   }
 
-  final top = _tryParseCssLength(params[0]);
-  final right = _tryParseCssLength(params[1]);
-  final bottom = _tryParseCssLength(params[2]);
-  final left = _tryParseCssLength(params[3]);
+  final roundAt = _findParamLiteral(params, 'round');
+  final edgeExpressions =
+      roundAt > -1 ? params.sublist(0, roundAt) : params.sublist(0, 4);
+  if (edgeExpressions.length != 4) {
+    return null;
+  }
+
+  final top = _tryParseCssLength(edgeExpressions[0]);
+  final right = _tryParseCssLength(edgeExpressions[1]);
+  final bottom = _tryParseCssLength(edgeExpressions[2]);
+  final left = _tryParseCssLength(edgeExpressions[3]);
   if (top == null || right == null || bottom == null || left == null) {
     return null;
   }
 
-  // CSS clip-path: rect(top right bottom left) uses inset semantics per spec:
-  // each value is the distance inset from the respective edge, not a coordinate.
-  return CssClipPathInset(
-    cutout: _CssClipPathTrbl(
-      top: top,
-      right: right,
-      bottom: bottom,
-      left: left,
-    ),
+  _CssClipPathRadius? radius;
+  if (roundAt > -1 && roundAt + 1 < params.length) {
+    radius = _tryParseCssClipPathRadius(params.sublist(roundAt + 1));
+    if (radius == null) {
+      return null;
+    }
+  }
+
+  return CssClipPathRectLtrb(
+    top: top,
+    right: right,
+    bottom: bottom,
+    left: left,
+    radius: radius,
   );
 }
 
@@ -469,6 +524,7 @@ CssClipPathShape? _tryParseCssClipPathXywh(css.FunctionTerm expression) {
     return null;
   }
 
+  final roundAt = _findParamLiteral(params, 'round');
   final x = _tryParseCssLength(params[0]);
   final y = _tryParseCssLength(params[1]);
   final width = _tryParseCssLength(params[2]);
@@ -477,7 +533,15 @@ CssClipPathShape? _tryParseCssClipPathXywh(css.FunctionTerm expression) {
     return null;
   }
 
-  return CssClipPathRect(x: x, y: y, width: width, height: height);
+  _CssClipPathRadius? radius;
+  if (roundAt > -1 && roundAt + 1 < params.length) {
+    radius = _tryParseCssClipPathRadius(params.sublist(roundAt + 1));
+    if (radius == null) {
+      return null;
+    }
+  }
+
+  return CssClipPathRect(x: x, y: y, width: width, height: height, radius: radius);
 }
 
 int _findParamLiteral(List<css.Expression> params, String literal) {
