@@ -321,6 +321,19 @@ Future<void> main() async {
         expect(explained, equals(padding('[RichText:(:Foo)]')));
       });
 
+      testWidgets('renders string literal', (WidgetTester tester) async {
+        // Notice the escaped single quotes wrapping the style attribute!
+        const html = '<ul style=\'list-style-type: "★"\'><li>Foo</li></ul>';
+        final explained = await explain(tester, html);
+        expect(explained, equals(padding(item('★', 'Foo'))));
+      });
+
+      testWidgets('renders string literal (single quotes)', (tester) async {
+        const html = "<ul style=\"list-style-type: '👉'\"><li>Foo</li></ul>";
+        final explained = await explain(tester, html);
+        expect(explained, equals(padding(item('👉', 'Foo'))));
+      });
+
       testWidgets('renders square', (WidgetTester tester) async {
         const html = '<ul style="list-style-type: square"><li>Foo</li></ul>';
         final explained = await explain(tester, html);
@@ -601,6 +614,59 @@ Future<void> main() async {
             ),
           );
         });
+      });
+      testWidgets('renders cjk-ideographic', (WidgetTester tester) async {
+        const html =
+            '<ol style="list-style-type: cjk-ideographic"><li>x</li><li>x</li><li>x</li></ol>';
+        final explained = await explain(tester, html);
+        expect(
+          explained,
+          equals(
+            padding(
+              list([
+                item('一、', 'x'),
+                item('二、', 'x'),
+                item('三、', 'x'),
+              ]),
+            ),
+          ),
+        );
+      });
+
+      testWidgets('renders lower-greek', (WidgetTester tester) async {
+        const html =
+            '<ol style="list-style-type: lower-greek"><li>x</li><li>x</li><li>x</li></ol>';
+        final explained = await explain(tester, html);
+        expect(
+          explained,
+          equals(
+            padding(
+              list([
+                item('α.', 'x'),
+                item('β.', 'x'),
+                item('γ.', 'x'),
+              ]),
+            ),
+          ),
+        );
+      });
+
+      testWidgets('renders binary', (WidgetTester tester) async {
+        const html =
+            '<ol style="list-style-type: binary"><li>x</li><li>x</li><li>x</li></ol>';
+        final explained = await explain(tester, html);
+        expect(
+          explained,
+          equals(
+            padding(
+              list([
+                item('1.', 'x'),
+                item('10.', 'x'),
+                item('11.', 'x'),
+              ]),
+            ),
+          ),
+        );
       });
     });
 
